@@ -1,5 +1,7 @@
 # Vue-Weather ⛅
 
+[![Netlify Status](https://api.netlify.com/api/v1/badges/75b8f8ca-bcbc-4e83-9c39-4e3fb247b045/deploy-status)](https://app.netlify.com/sites/vue-getweather/deploys)
+
 Vue Weather is a Vue 3 App that utilizes the OpenWeather API to retrieve weather data from various cities in the world.
 
 ![App screenshot](src/assets/screenshot.png)
