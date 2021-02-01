@@ -1,9 +1,7 @@
 <template>
   <div
     id="app"
-    :class="
-      typeof weather.main != 'undefined' && weather.main.temp > 16 ? 'warm' : ''
-    "
+    :class="(typeof weather.main != 'undefined', currentBackground())"
   >
     <main>
       <div class="app-title">
@@ -29,8 +27,13 @@
         </div>
       </div>
 
-      <div class="errors" v-if="weather.cod != '200'">
-        <p>{{ weather.message }}</p>
+      <div class="alert" v-if="error_msg">
+        <span
+          class="closebtn"
+          onclick="this.parentElement.style.display='none';"
+          >&times;</span
+        >
+        <strong>Error!</strong> {{ error_msg }}
       </div>
 
       <div class="weather-wrap" v-if="typeof weather.main != 'undefined'">
@@ -72,24 +75,36 @@ export default {
       weather_icon: "",
       temp: "",
       isMetric: true,
+      error_msg: "",
+      dayTime: "",
     };
   },
   methods: {
     fetchWeather() {
-      this.isSearching = true;
-      fetch(
-        `${this.url_base}weather?q=${this.query}&units=metric&appid=${this.api_key}`
-      )
-        .then((res) => {
-          return res.json();
-        })
-        .then(this.setResuts);
-      this.query = "";
+      if (this.query != "") {
+        this.error_msg = "";
+        this.isSearching = true;
+        fetch(
+          `${this.url_base}weather?q=${this.query}&units=metric&appid=${this.api_key}`
+        )
+          .then((res) => {
+            return res.json();
+          })
+          .then(this.setResuts);
+        this.query = "";
+      } else {
+        this.error_msg = "Please provide a city name.";
+      }
     },
     setResuts(results) {
-      this.weather = results;
-      this.temp = Math.round(this.weather.main.temp) + "°c";
-      this.weather_icon = `http://openweathermap.org/img/wn/${this.weather.weather[0].icon}@2x.png`;
+      if (results.cod == "200") {
+        this.weather = results;
+        this.temp = Math.round(results.main.temp) + "°c";
+        this.weather_icon = `http://openweathermap.org/img/wn/${results.weather[0].icon}@2x.png`;
+        this.dayTime = this.weather.weather[0].icon.slice(-1);
+      } else {
+        this.error_msg = results.message;
+      }
       this.isSearching = false;
     },
     dateBuilder() {
@@ -132,6 +147,13 @@ export default {
         this.temp = fahrenheit + "°F";
       }
     },
+    currentBackground() {
+      if (this.dayTime == "d") {
+        return this.weather.main.temp >= 16 ? "warm-day" : "cold-day";
+      } else if (this.dayTime == "n") {
+        return this.weather.main.temp >= 16 ? "warm-night" : "cold-night";
+      }
+    },
   },
 };
 </script>
@@ -148,14 +170,25 @@ body {
 }
 
 #app {
-  background-image: url("./assets/cold-bg.jpg");
+  background-image: url("./assets/warm-night-bg.jpeg");
   background-size: cover;
   background-position: bottom;
   transition: 0.4s;
 }
 
-#app.warm {
-  background-image: url("./assets/warm-bg.jpg");
+#app.warm-day {
+  background-image: url("./assets/warm-day-bg.jpeg");
+}
+
+#app.warm-night {
+  background-image: url("./assets/warm-night-bg.jpeg");
+}
+
+#app.cold-day {
+  background-image: url("./assets/cold-day-bg.jpeg");
+}
+#app.cold-night {
+  background-image: url("./assets/cold-night-bg.jpeg");
 }
 
 main {
@@ -311,5 +344,32 @@ main {
   font-weight: 500;
   text-align: center;
   text-shadow: 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.alert {
+  width: 80%;
+  margin: 10px auto;
+  padding: 20px;
+  color: white;
+  text-align: center;
+  text-transform: capitalize;
+  background-color: rgb(244, 67, 54);
+  text-shadow: 1px 2px rgba(0, 0, 0, 0.25);
+  box-shadow: 3px 3px rgba(244, 67, 54, 0.25);
+}
+
+.closebtn {
+  margin-left: 15px;
+  color: white;
+  font-weight: bold;
+  float: right;
+  font-size: 40px;
+  line-height: 20px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.closebtn:hover {
+  color: black;
 }
 </style>
